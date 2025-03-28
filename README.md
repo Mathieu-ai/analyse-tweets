@@ -38,6 +38,7 @@ To get started with the project, follow the steps below.
 1. **Python 3.x** installed on your local machine.
 2. **MySQL** installed and running locally (or via Docker).
 3. **pip** for installing Python dependencies.
+4. **Chat gpt api key** to use AI
 
 ### Steps to Set Up the Project
 
@@ -67,6 +68,17 @@ To get started with the project, follow the steps below.
 
     ```bash
     python src/app.py
+    ```
+
+5. **Add .env**:
+
+    ```js
+    OPENAI_KEY="skey"
+    OPEN_ORG="org-key"
+    MYSQL_HOST="localhost"
+    MYSQL_DATABASE="socialmetrics"
+    MYSQL_USER="root"
+    MYSQL_PASSWORD="example"
     ```
 
 ---
@@ -245,5 +257,4 @@ The MySQL server will be available on port `3306`.
 
 ## Demo
 
-https://github.com/user-attachments/assets/962b7b33-626f-4fa3-bd45-6c5f42e340ea
-
+<https://github.com/user-attachments/assets/962b7b33-626f-4fa3-bd45-6c5f42e340ea>
