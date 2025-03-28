@@ -1,7 +1,22 @@
+import numpy as np
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, confusion_matrix, precision_recall_fscore_support
 import re
+from nltk.stem import WordNetLemmatizer
+import openai
 import os
 import textwrap
+import seaborn as sns
+import matplotlib.pyplot as plt
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 import database
+
+# OpenAI API setup
+openai.api_key = os.environ['OPENAI_KEY']
+openai.organization = os.environ['OPEN_ORG']
 
 # List of bad and good words
 bad_words = {
@@ -54,7 +69,28 @@ def load_data():
     return pd.DataFrame(data, columns=["text", "positive", "negative"])
 
 def train_model():
-    print('todo train')
+    df = load_data()
+    if df.empty:
+        print("No data available for training.")
+        vectorizer = CountVectorizer(stop_words="english")
+        model = LogisticRegression()
+        vectorizer.fit([""])
+        return model, vectorizer
+
+    X = df["text"]
+    y = df["positive"]
+
+    flagged_data = [flag_words(text) for text in X]
+    y_gpt = [analyze_sentiment(text) for text in X]
+
+    vectorizer = CountVectorizer(stop_words="english")
+    X_vec = vectorizer.fit_transform(X)
+
+    model = LogisticRegression()
+    model.fit(X_vec, y_gpt)
+
+    print("Model trained successfully.")
+    return model, vectorizer
 
 def generate_confusion_matrix(y_true, y_pred, class_names, filename):
     os.makedirs("src/reports", exist_ok=True)
@@ -71,14 +107,33 @@ def generate_confusion_matrix(y_true, y_pred, class_names, filename):
     print(f"Confusion matrix saved at: {file_path}")
 
 def analyze_model_performance(y_true, y_pred):
-    print('todo analyse perf')
+    report = classification_report(y_true, y_pred, target_names=["Negative", "Positive"])
+    generate_confusion_matrix(y_true, y_pred, ["Negative", "Positive"], "positive_confusion_matrix.png")
+    precision, recall, f1, _ = precision_recall_fscore_support(y_true, y_pred, average=None)
+    return report, {
+        "Positive Class": {"Precision": precision[1], "Recall": recall[1], "F1-Score": f1[1]},
+        "Negative Class": {"Precision": precision[0], "Recall": recall[0], "F1-Score": f1[0]}
+    }
 
 def evaluate_model():
-    print('todo evaluate model')
+    df = load_data()
+    if df.empty:
+        print("No data available for evaluation.")
+        return
+
+    X = df["text"]
+    y = df["positive"]
+    model, vectorizer = train_model()
+    X_vec = vectorizer.transform(X)
+    y_pred = model.predict(X_vec)
+
+    report, analysis = analyze_model_performance(y, y_pred)
+    pdf_report_path = generate_pdf_report(report, analysis)
+    print(f"Evaluation report generated at: {pdf_report_path}")
+    return pdf_report_path
 
 def retrain():
-    print('todo evaluate')
-    # TODO evaluate_model()
+    evaluate_model()
 
 def generate_ai_analysis(report, analysis):
     prompt = f"""
@@ -179,8 +234,7 @@ def generate_pdf_report(report, analysis):
 
 if __name__ == "__main__":
     try:
-        print('todo train and evaluate')
-        # TODO train_model()
-        # TODO evaluate_model()
+        train_model()
+        evaluate_model()
     except Exception as e:
         print(f"Error during training: {e}")
