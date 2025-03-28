@@ -244,3 +244,6 @@ To run the application in a containerized environment, you can use Docker. The `
 The MySQL server will be available on port `3306`.
 
 ## Demo
+
+https://github.com/user-attachments/assets/962b7b33-626f-4fa3-bd45-6c5f42e340ea
+
